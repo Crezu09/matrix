@@ -1,22 +1,18 @@
 #!/bin/bash
 
-echo "Compiling main.cpp"
-
-g++ main.cpp -xc++ -std=c++20 -o main.out -Wall
+g++ $1 -xc++ -std=c++20 -o a.out -Wall
 
 if [ $? -eq 0 ]; then
     echo "Compilation successful"
+    echo "*"
 else
     exit
 fi
 
-echo "*"
-echo "Executing main.out"
-echo "*"
+./a.out
 
-./main.out
 if [ $? -eq 0 ]; then
-    rm ./main.out
+    rm ./a.out
 else
     exit
 fi

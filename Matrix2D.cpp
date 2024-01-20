@@ -336,7 +336,6 @@ int main()
         std::cout << result;
         std::cout << expected_result;
 
-        // Transpose ?
     }
     catch (const std::exception& e)
     {
