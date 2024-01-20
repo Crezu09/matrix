@@ -2,7 +2,7 @@
 
 echo "Compiling main.cpp"
 
-g++ main.cpp -xc++ -std=c++20 -o main.out
+g++ main.cpp -xc++ -std=c++20 -o main.out -Wall
 
 if [ $? -eq 0 ]; then
     echo "Compilation successful"
