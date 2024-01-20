@@ -2,8 +2,6 @@
 #include <array>
 #include <cstdlib>
 #include <cassert>
-#define assertm(exp, msg) assert(((void)msg, exp))
-
 
 template <typename T, std::size_t R, std::size_t C>
 class Matrix2D
@@ -47,6 +45,26 @@ public:
         return *this;
     }
 
+    bool operator== (const Matrix2D& other)
+    {
+        for(std::size_t r = 0 ; r < R; ++r)
+        {
+            for(std::size_t c = 0 ; c < C; ++c)
+            {
+                if ((*this)(r, c) != other(r, c))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    bool operator!= (const Matrix2D& other)
+    {
+        return !(*this == other);
+    }
+
     Matrix2D operator+ (const Matrix2D& m)
     {
         Matrix2D<T,R,C> result;
@@ -67,7 +85,7 @@ public:
         {
             for(std::size_t c = 0 ; c < C ; ++c)
             {
-                result.m_data[r * C + c] = (*this)(r,c);
+                result.m_data[r * C + c] = (*this)(r,c) + value;
             }
         } 
         return result; 
@@ -85,6 +103,19 @@ public:
         } 
         
         return result;
+    }
+
+    Matrix2D operator- (const T value)
+    {
+        Matrix2D<T,R,C> result;
+        for(std::size_t r = 0 ; r < R ; ++r)
+        {
+            for(std::size_t c = 0 ; c < C ; ++c)
+            {
+                result.m_data[r * C + c] = (*this)(r,c) - value;
+            }
+        } 
+        return result; 
     }
 
     template<std::size_t N>
@@ -126,6 +157,21 @@ public:
         return m_data[r * C + c];
     }
 
+    friend
+    std::ostream& operator<< (std::ostream& os, const Matrix2D& m)
+    {
+        for(std::size_t r = 0; r < R; ++r)
+        {
+            for(std::size_t c = 0; c < C; ++c)
+            {
+                os << m(r,c) << ",";
+            }
+            os << "\n";
+        }
+        os << "\n";
+        return os;
+    }
+
     std::size_t rows() 
     {
         return R;
@@ -134,18 +180,6 @@ public:
     std::size_t cols() 
     {
         return C;
-    }
-    
-    // TODO: check if requires possible ? what is requires anyways...
-    template <std::size_t ROW, std::size_t COL>
-    void setValue(const T value)
-    {
-        if(ROW >= R || COL >= C)
-        {
-            throw std::invalid_argument("Dimension mismatch.");
-        }
-
-        m_data[ROW * C + COL] = value;
     }
 
 private:
@@ -167,15 +201,89 @@ int main()
             value1, value2, value3 ,value4
         };
 
+        Matrix2D<int, 2, 2> AA = {
+            value1, value2, value3 ,value4
+        };
+        
+        // Check if operator== working
+        if(!(A == AA))
+        {
+            throw std::logic_error("Main : operator== unexpected result!");
+        }
+
+        // Check if operator!= working
+        if(A != AA)
+        {
+            throw std::logic_error("Main : operator!= unexpected result!");
+        }
+
         // Copy A to B
         Matrix2D B(A);
+        if(A != B)
+        {
+            throw(std::logic_error("Main : Copy unexpected result!"));
+        }
 
         // Assign A to C
         Matrix2D C = A;
+        if(A != B)
+        {
+            throw(std::logic_error("Main : Assign unexpected result!"));
+        }
 
-        // Matrix addition
-        Matrix2D D = A + B;
+        // Matrix addition scalar
         const int x = std::rand() % 100;
+        Matrix2D<int,2,2> expected =
+        {
+            A(0,0) + x, A(0,1) + x,
+            A(1,0) + x, A(1,1) + x   
+        };
+        B = A + x;
+
+        if(B != expected)
+        {
+            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+        }
+        
+        // Matrix addition
+        B = A + A;
+        expected(0,0) = 2 * A(0,0);
+        expected(0,1) = 2 * A(0,1);
+        expected(1,0) = 2 * A(1,0);
+        expected(1,1) = 2 * A(1,1);
+
+        if(B != expected)
+        {
+            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+        }
+
+        // Matrix subtract scalar
+        B = A - x;
+        expected(0,0) = A(0,0) - x;
+        expected(0,1) = A(0,1) - x;
+        expected(1,0) = A(1,0) - x;
+        expected(1,1) = A(1,1) - x;
+        if(B != expected)
+        {
+            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+        }
+        
+        // Matrix subtract
+        B = A - A;
+        expected(0,0) = 0;
+        expected(0,1) = 0;
+        expected(1,0) = 0;
+        expected(1,1) = 0;
+
+        if(B != expected)
+        {
+            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+        }
+
+        // operator <<
+        std::cout << B;
+        std::cout << expected;
+
     }
     catch (const std::exception& e)
     {
