@@ -17,9 +17,9 @@ public:
         }
 
         auto it = values.begin();
-        for (std::size_t i = 0 ; i < values.size(); ++i) 
+        for (auto &element : m_data)
         {
-            m_data[i] = *(it++);
+            element = *(it++);
         }
     }
 
@@ -45,7 +45,7 @@ public:
         return *this;
     }
 
-    bool operator== (const Matrix2D& other)
+    bool operator== (const Matrix2D& other) const
     {
         for(std::size_t r = 0 ; r < R; ++r)
         {
@@ -60,7 +60,7 @@ public:
         return true;
     }
     
-    bool operator!= (const Matrix2D& other)
+    bool operator!= (const Matrix2D& other) const
     {
         return !(*this == other);
     }
@@ -72,7 +72,7 @@ public:
         {
             for(std::size_t c = 0 ; c < C ; ++c)
             {
-                result.m_data[r * C + c] = (*this)(r,c) + m(r,c);
+                result(r,c) = (*this)(r,c) + m(r,c);
             }
         } 
         return result;
@@ -85,7 +85,7 @@ public:
         {
             for(std::size_t c = 0 ; c < C ; ++c)
             {
-                result.m_data[r * C + c] = (*this)(r,c) + value;
+                result(r,c) = (*this)(r,c) + value;
             }
         } 
         return result; 
@@ -98,7 +98,7 @@ public:
         {
             for(std::size_t c = 0 ; c < C ; ++c)
             {
-                result.m_data[r * C + c] = (*this)(r,c) - m(r,c);
+                result(r,c) = (*this)(r,c) - m(r,c);
             }
         } 
         
@@ -112,10 +112,23 @@ public:
         {
             for(std::size_t c = 0 ; c < C ; ++c)
             {
-                result.m_data[r * C + c] = (*this)(r,c) - value;
+                result(r,c) = (*this)(r,c) - value;
             }
         } 
         return result; 
+    }
+
+    Matrix2D operator* (const T value)
+    {
+        Matrix2D<T,R,C> result;
+        for(std::size_t r = 0 ; r < R ; ++r)
+        {
+            for(std::size_t c = 0 ; c < C ; ++c)
+            {
+                result(r,c) = (*this)(r,c) * value;
+            }
+        } 
+        return result;
     }
 
     template<std::size_t N>
@@ -123,15 +136,14 @@ public:
     {
         Matrix2D<T,R,N> result;
 
-        // Reihe x Spalte
         for(std::size_t r = 0; r < R; ++r)
         {
             for(std::size_t c = 0; c < C; ++c)
             {
-                for(std::size_t x = 0; x < N; ++x)
+                for(std::size_t n = 0; n < N ; ++n)
                 {
-                    this(r,c)+=this(r,x)*m(x,c);
-                }                
+                    result(r,n) += (*this)(r,c) * m(c,n);
+                }
             }
         }
         return result; 
@@ -141,7 +153,7 @@ public:
     {
         if (r >= R || c >= C)
         {
-            throw std::invalid_argument("Matrix2D::operator[] : Dimension mismatch.");
+            throw std::out_of_range("Matrix2D::operator() : Dimension mismatch.");
         }
 
         return m_data[r * C + c];
@@ -151,7 +163,7 @@ public:
     {
         if (r >= R || c >= C)
         {
-            throw std::invalid_argument("Matrix2D::operator[] : Dimension mismatch.");
+            throw std::out_of_range("Matrix2D::operator() : Dimension mismatch.");
         }
 
         return m_data[r * C + c];
@@ -172,12 +184,12 @@ public:
         return os;
     }
 
-    std::size_t rows() 
+    std::size_t rows() const
     {
         return R;
     }
 
-    std::size_t cols() 
+    std::size_t cols() const
     {
         return C;
     }
@@ -254,7 +266,7 @@ int main()
 
         if(B != expected)
         {
-            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+            throw(std::logic_error("Main : Addition matrix unexpected result!"));
         }
 
         // Matrix subtract scalar
@@ -265,7 +277,7 @@ int main()
         expected(1,1) = A(1,1) - x;
         if(B != expected)
         {
-            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+            throw(std::logic_error("Main : Subtract scalar unexpected result!"));
         }
         
         // Matrix subtract
@@ -277,13 +289,54 @@ int main()
 
         if(B != expected)
         {
-            throw(std::logic_error("Main : Addition scalar unexpected result!"));
+            throw(std::logic_error("Main : Subtract matrix unexpected result!"));
+        }
+
+        // Matrix multiply scalar
+        B = A * x;
+        expected(0,0) = A(0,0) * x;
+        expected(0,1) = A(0,1) * x;
+        expected(1,0) = A(1,0) * x;
+        expected(1,1) = A(1,1) * x;
+
+        if(B != expected)
+        {
+            throw(std::logic_error("Main : Multiply scalar unexpected result!"));
+        }
+        
+        // Matrix multiply X (3,2) * Y (2,4) = result (3,4)
+        Matrix2D<int, 3 , 2> X =
+        {
+            0, 1,
+            2, 3,
+            4, 5
+        };
+
+        Matrix2D<int, 2, 4> Y = 
+        {
+            0, 1, 2, 3,
+            4, 5, 6, 7
+        };
+
+        Matrix2D<int, 3, 4> expected_result = 
+        {
+             4,  5,  6,  7,
+            12, 17, 22, 27,
+            20, 29, 38, 47
+        };
+
+        Matrix2D result = X * Y;
+        
+        if(result != expected_result)
+        {
+            throw(std::logic_error("Main : Multiply matrix unexpected result!"));
         }
 
         // operator <<
-        std::cout << B;
-        std::cout << expected;
+        std::cout << result;
+        std::cout << expected_result;
 
+        // Transpose ?
     }
     catch (const std::exception& e)
     {
