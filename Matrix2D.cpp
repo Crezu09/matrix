@@ -1,15 +1,17 @@
 #include <iostream>
 #include <array>
-#include <cstdlib>
-#include <cassert>
+#include <chrono>
+#include <stdexcept>
 
 template <typename T, std::size_t R, std::size_t C>
 class Matrix2D
 {
 public:
+    // default constructor
     Matrix2D() = default;
 
-    Matrix2D(std::initializer_list<T> values)
+    // initialize with {}
+    Matrix2D(const std::initializer_list<T>& values)
     {
         if(values.size() != (R * C))
         {
@@ -23,29 +25,23 @@ public:
         }
     }
 
-    Matrix2D(const Matrix2D& m) 
-    {
-        for (std::size_t i = 0; i < R * C; ++i)
-        {
-            m_data[i] = m.m_data[i];
-        }
-    }
+    // copy constructor
+    Matrix2D(const Matrix2D& m) : m_data(m.m_data) {} 
 
-    ~Matrix2D() = default;
-
-    Matrix2D& operator=(const Matrix2D& other)
+    // copy-assignment
+    const Matrix2D& operator=(const Matrix2D& other)
     {
         if (this != &other)
         {
-            for (std::size_t i = 0; i < R * C; ++i)
-            {
-                m_data[i] = other.m_data[i];
-            }
+            m_data = other.m_data;
         }
         return *this;
     }
+    
+    // destructor
+    ~Matrix2D() = default;
 
-    bool operator== (const Matrix2D& other) const
+    const bool operator== (const Matrix2D& other) const
     {
         for(std::size_t r = 0 ; r < R; ++r)
         {
@@ -60,12 +56,12 @@ public:
         return true;
     }
     
-    bool operator!= (const Matrix2D& other) const
+    const bool operator!= (const Matrix2D& other) const
     {
         return !(*this == other);
     }
 
-    Matrix2D operator+ (const Matrix2D& m)
+    const Matrix2D operator+ (const Matrix2D& m) const
     {
         Matrix2D<T,R,C> result;
         for(std::size_t r = 0 ; r < R ; ++r)
@@ -78,7 +74,7 @@ public:
         return result;
     }
 
-    Matrix2D operator+ (const T value)
+    const Matrix2D operator+ (const T value) const
     {
         Matrix2D<T,R,C> result;
         for(std::size_t r = 0 ; r < R ; ++r)
@@ -91,7 +87,7 @@ public:
         return result; 
     }
 
-    Matrix2D operator- (const Matrix2D& m)
+    const Matrix2D operator- (const Matrix2D& m) const
     {
         Matrix2D<T,R,C> result;
         for(std::size_t r = 0 ; r < R ; ++r)
@@ -105,7 +101,7 @@ public:
         return result;
     }
 
-    Matrix2D operator- (const T value)
+    const Matrix2D operator- (const T value) const
     {
         Matrix2D<T,R,C> result;
         for(std::size_t r = 0 ; r < R ; ++r)
@@ -118,7 +114,7 @@ public:
         return result; 
     }
 
-    Matrix2D operator* (const T value)
+    const Matrix2D operator* (const T value) const
     {
         Matrix2D<T,R,C> result;
         for(std::size_t r = 0 ; r < R ; ++r)
@@ -132,7 +128,7 @@ public:
     }
 
     template<std::size_t N>
-    Matrix2D<T, R, N> operator* (const Matrix2D<T, C, N>& m)
+    const Matrix2D<T, R, N> operator* (const Matrix2D<T, C, N>& m) const
     {
         Matrix2D<T,R,N> result;
 
@@ -149,7 +145,7 @@ public:
         return result; 
     }
 
-    T &operator()(std::size_t r, std::size_t c)
+    T& operator()(std::size_t r, std::size_t c)
     {
         if (r >= R || c >= C)
         {
@@ -159,7 +155,7 @@ public:
         return m_data[r * C + c];
     }
 
-    const T &operator()(std::size_t r, std::size_t c) const
+    const T& operator()(std::size_t r, std::size_t c) const
     {
         if (r >= R || c >= C)
         {
@@ -176,20 +172,20 @@ public:
         {
             for(std::size_t c = 0; c < C; ++c)
             {
-                os << m(r,c) << ",";
+                os << m(r,c);
+                if (c < C - 1) os << ", ";
             }
             os << "\n";
         }
-        os << "\n";
         return os;
     }
 
-    std::size_t rows() const
+    const std::size_t rows() const
     {
         return R;
     }
 
-    std::size_t cols() const
+    const std::size_t cols() const
     {
         return C;
     }
@@ -238,7 +234,7 @@ int main()
 
         // Assign A to C
         Matrix2D C = A;
-        if(A != B)
+        if(A != C)
         {
             throw(std::logic_error("Main : Assign unexpected result!"));
         }
@@ -335,7 +331,6 @@ int main()
         // operator <<
         std::cout << result;
         std::cout << expected_result;
-
     }
     catch (const std::exception& e)
     {

@@ -14,5 +14,6 @@ fi
 if [ $? -eq 0 ]; then
     rm ./a.out
 else
+    rm ./a.out
     exit
 fi
